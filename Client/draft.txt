@@ -1,0 +1,133 @@
+import React, { Fragment, useState } from 'react';
+import { FileUploader } from "react-drag-drop-files";
+import axios from "axios";
+
+import Sidebar from '../../partials/Sidebar';
+import Header from '../../partials/Header';
+import DashboardCard07 from '../../partials/dashboard/DashboardCard07';
+
+const fileTypes = ["JPG", "PNG", "GIF"];
+
+function Dashboard() {
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [selectedFiles, setSelectedFiles] = useState([])
+  const [numberFiles, setNumberFiles] = useState(0)
+  const [data, setData] = useState(null)
+
+  const handleSubmit = async e =>  {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await axios.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      const { fileName, filePath } = res.data;
+
+      setUploadedFile({ fileName, filePath });
+
+      console.log('File Uploaded');
+    } catch (err) {
+      if (err.response.status === 500) {
+        console.log('There was a problem with the server');
+      } else {
+        console.log(err.response.data.msg);
+      }
+    }
+  }
+
+
+  const handleChange = (e) => {
+    let noOfFiles = e.length
+    let files = e
+    let fileNames = []
+    let dataFiles = []
+
+    for(let index = 0; index <noOfFiles; index++){
+      fileNames.push(files[index].name)
+      console.log('name:',files[index].name);
+      dataFiles.push(e[index])
+    }
+    setData(dataFiles)
+
+    fileNames.map(item => console.log(item))
+    setSelectedFiles([...selectedFiles, ...fileNames])
+  };
+
+  const deleteFile = (i) => {
+    setSelectedFiles(selectedFiles.filter((item, index) => index !== i))
+    setData(data.filter((item, index) => index !== i))
+    console.log(data)
+  }
+
+
+  return (
+    <div style={{background:'#0f172a'}} className="flex h-screen overflow-hidden">
+
+      {/* Sidebar */}
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      {/* Content area */}
+      <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+
+        {/*  Site header */}
+        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+        <main style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',}}>
+
+          <form onSubmit={handleSubmit}>
+
+            <FileUploader handleChange={handleChange} multiple={true} name="file" types={fileTypes}>
+              <div style={{background:'#0f172a',  borderRadius:'16px'}}  className="bg-white rounded-md shadow-lg">
+                  <div style={{ background:'#1c2b50',  borderColor:'#f9f9f9',borderRadius:'16px', width:'44rem', height:'13rem'}}className="items-center p-4 m-4 text-center border-2 w-96 h-96">
+                      <p style={{color:'#f9f9f9'}} className="self-auto">Drag and drop / Click here to add file(s)</p>
+
+                      < svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-2/3 pt-8 m-auto h-2/3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="#f9f9f9"
+                      >
+                          <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+                          />
+                      </svg>
+                  </div>
+              </div>
+            </FileUploader>
+            <DashboardCard07  
+              selectedFiles = {selectedFiles}    
+              deleteFile = {deleteFile}
+            />
+            <div style={{display: 'flex'}}>
+            <button type="submit" onSubmit={handleSubmit} style={{display:'flex',margin:'auto', background:'#1c2b50',  borderColor:'#f9f9f9',}}className="btn bg-indigo-500 hover:bg-indigo-600 text-white">
+                    <span className="hidden xs:block ml-2">Upload File(s)</span>
+            </button>  
+            <button type="submit" style={{display:'flex',margin:'auto', background:'#1c2b50',  borderColor:'#f9f9f9',}}className="btn bg-indigo-500 hover:bg-indigo-600 text-white">
+                    <span className="hidden xs:block ml-2">Upload File(s) as folder</span>
+            </button> 
+            </div>
+          </form>
+                    
+        </main>
+
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;
